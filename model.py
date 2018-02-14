@@ -55,3 +55,12 @@ class Model:
         results = cursor.execute(query, (aid,))
 
         return results.fetchone()
+
+    def save_content(self, aid, content):
+        cursor = self.conn.cursor()
+        cursor.execute('UPDATE task SET content=? WHERE aid=?', (content, aid))
+
+        self.conn.commit()
+        query = '''
+            UPDA
+        '''
