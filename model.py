@@ -61,6 +61,9 @@ class Model:
         cursor.execute('UPDATE task SET content=? WHERE aid=?', (content, aid))
 
         self.conn.commit()
-        query = '''
-            UPDA
-        '''
+
+    def toggle_long_term(self, aid):
+        cursor = self.conn.cursor()
+        cursor.execute('UPDATE task SET long_term=NOT long_term WHERE aid=?', (aid))
+
+        self.conn.commit()

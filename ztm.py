@@ -92,13 +92,17 @@ q - exit
         task = self.model.get_task(aid)
         print('\n' + bcolors.HEADER + 'Managing: [' + task['aid'] + '] ' + task['description'] + bcolors.ENDC)
 
+        long_term = ' '
+        if task['long_term'] and task['long_term'] != 'FALSE':
+            long_term = 'x'
+
         print('''
             #%s
             Description: %s
             Tags:        [%s]
             Long Term:   [%s]
             Created:     %s
-        ''' % (task['aid'], task['description'], '', ' ', task['created_at']))
+        ''' % (task['aid'], task['description'], '', long_term, task['created_at']))
 
         self.manage_task_menu(aid)
 
@@ -113,6 +117,9 @@ q - exit
 
         elif menu == 'e':
             self.edit_task(aid)
+
+        elif menu == '*':
+            self.toggle_long_term(aid)
 
         elif menu == '<':
             self.menu()
@@ -141,11 +148,15 @@ q - exit
     def edit_task(self, aid):
         task = self.model.get_task(aid)
 
+        long_term = ' '
+        if task['long_term'] and task['long_term'] != 'FALSE':
+            long_term = 'x'
+
         content = '''%s
 Tags:        [%s]
 Long Term:   [%s]
 Created:     %s
-        ''' % (task['aid'], '', ' ', task['created_at'])
+        ''' % (task['aid'], '', long_term, task['created_at'])
 
         content += '\n# ' + task['description']
         if task['content']:
@@ -176,6 +187,10 @@ Created:     %s
 
         self.model.save_content(aid, content)
         print(bcolors.OKBLUE + '\n[content has been saved]' + bcolors.ENDC)
+        self.manage_task(aid)
+
+    def toggle_long_term(self, aid):
+        self.model.toggle_long_term(aid)
         self.manage_task(aid)
 
     def bye(self):
