@@ -48,6 +48,10 @@ Task manager from Zordsdavini (2018)
         elif menu == '+':
             self.add()
 
+        else:
+            print(bcolors.FAIL + 'This is not implemented...\n' + bcolors.ENDC)
+            self.menu()
+
     def about(self):
         print(bcolors.WARNING + '''
 Short instruction
@@ -99,7 +103,7 @@ q - exit
         self.manage_task_menu(aid)
 
     def manage_task_menu(self, aid):
-        menu = input(bcolors.OKGREEN + 'What you want to do? (?e*+-v&q) ' + bcolors.ENDC)
+        menu = input(bcolors.OKGREEN + 'What you want to do? (?e*+-v&><q) ' + bcolors.ENDC)
 
         if menu == 'q':
             self.bye()
@@ -109,6 +113,13 @@ q - exit
 
         elif menu == 'e':
             self.edit_task(aid)
+
+        elif menu == '<':
+            self.menu()
+
+        else:
+            print(bcolors.FAIL + 'This is not implemented...\n' + bcolors.ENDC)
+            self.manage_task_menu(aid)
 
     def manage_task_about(self, aid):
         print(bcolors.WARNING + '''
@@ -121,6 +132,8 @@ e - edit content
 - - remove tag
 v - mark done
 & - add child task
+> - go to child
+< - back
 q - exit
         ''' + bcolors.ENDC)
         self.manage_task_menu(aid)
@@ -162,7 +175,7 @@ Created:     %s
                 found = True
 
         self.model.save_content(aid, content)
-        print(bcolors.OKBLUE + '[content has been saved]/n' + bcolors.ENDC)
+        print(bcolors.OKBLUE + '\n[content has been saved]' + bcolors.ENDC)
         self.manage_task(aid)
 
     def bye(self):
