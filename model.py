@@ -20,7 +20,12 @@ class Model:
         return self.conn.execute(query, tag_name)
 
     def get_all_tasks(self):
-        query = 'SELECT t.* FROM task t'
+        query = '''
+            SELECT t.*, GROUP_CONCAT(g.name, ' ') AS tag_names FROM task t
+            LEFT JOIN tag_task tt ON tt.task_id = t.id
+            LEFT JOIN tag g ON g.id = tt.tag_id
+            GROUP BY t.id
+        '''
 
         return self.conn.execute(query)
 
@@ -54,9 +59,8 @@ class Model:
             WHERE tt.task_id = ?
         '''
         tags = cursor.execute(tquery, (task['id'],))
-        task['tags'] = []
-        for tag in tags:
-            task['tags'].append(tag)
+        task['tags'] = [t for t in tags]
+        task['tag_names'] = [t['name'] for t in tags]
 
         return task
 

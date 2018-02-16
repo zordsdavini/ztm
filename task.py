@@ -1,6 +1,7 @@
 import re
-import sys
+import sqlite3
 import subprocess
+import sys
 import tempfile
 
 from pyfzf.pyfzf import FzfPrompt
@@ -22,7 +23,7 @@ class Task:
             tasksData = self.model.get_all_tasks()
 
         for t in tasksData:
-            tasks.append('%s: %s' % (t['aid'], t['description']))
+            tasks.append('%s: %s   [ %s ]' % (t['aid'], t['description'], t['tag_names']))
 
         selected = self.fzf.prompt(tasks)
         if selected:
@@ -174,7 +175,7 @@ Created:     %s ''' % (task['aid'], tags, long_term, task['created_at'])
     def add_tags(self, aid):
         task = self.model.get_task(aid)
         unlinked_tags = self.model.get_tags_not_in_task(task['id'])
-        if len(unlinked_tags) == 0:
+        if type(unlinked_tags) is sqlite3.Cursor and unlinked_tags.rowcount == 0:
             print(bcolors.FAIL + 'Where is no more unlinked tags left...' + bcolors.ENDC)
             self.manage_task(aid)
 
