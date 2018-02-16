@@ -67,3 +67,9 @@ class Model:
         cursor.execute('UPDATE task SET long_term=NOT long_term WHERE aid=?', (aid))
 
         self.conn.commit()
+
+    def toggle_done(self, aid):
+        cursor = self.conn.cursor()
+        cursor.execute('UPDATE task SET done=NOT done, finished_at=DATETIME(\'now\') WHERE aid=?', (aid))
+
+        self.conn.commit()
