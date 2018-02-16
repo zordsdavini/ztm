@@ -20,9 +20,7 @@ class Model:
         return self.conn.execute(query, tag_name)
 
     def get_all_tasks(self):
-        query = '''
-            SELECT t.* FROM task t
-        '''
+        query = 'SELECT t.* FROM task t'
 
         return self.conn.execute(query)
 
@@ -59,17 +57,47 @@ class Model:
     def save_content(self, aid, content):
         cursor = self.conn.cursor()
         cursor.execute('UPDATE task SET content=? WHERE aid=?', (content, aid))
-
         self.conn.commit()
 
     def toggle_long_term(self, aid):
         cursor = self.conn.cursor()
         cursor.execute('UPDATE task SET long_term=NOT long_term WHERE aid=?', (aid))
-
         self.conn.commit()
 
     def toggle_done(self, aid):
         cursor = self.conn.cursor()
         cursor.execute('UPDATE task SET done=NOT done, finished_at=DATETIME(\'now\') WHERE aid=?', (aid))
+        self.conn.commit()
 
+    def create_tag(self, name):
+        query = 'INSERT INTO tag (name) VALUES (?)'
+        cursor = self.conn.cursor()
+        cursor.execute(query, (name,))
+        self.conn.commit()
+
+        return cursor.lastrowid
+
+    def get_all_tags(self):
+        query = 'SELECT t.* FROM tag t'
+
+        return self.conn.execute(query)
+
+    def get_tag(self, tid):
+        query = 'SELECT t.* FROM tag t WHERE t.id = ?'
+        cursor = self.conn.cursor()
+        results = cursor.execute(query, (tid,))
+
+        return results.fetchone()
+
+    def get_tag_by_name(self, name):
+        query = 'SELECT t.* FROM tag t WHERE t.name = ?'
+        cursor = self.conn.cursor()
+        results = cursor.execute(query, (name,))
+
+        return results.fetchone()
+
+    def remove_tag_by_name(self, name):
+        query = 'DELETE FROM tag WHERE name = ?'
+        cursor = self.conn.cursor()
+        cursor.execute(query, (name,))
         self.conn.commit()

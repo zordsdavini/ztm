@@ -21,7 +21,7 @@ class Task:
             self.add()
             tasksData = self.model.get_all_tasks()
 
-        for t in self.model.get_all_tasks():
+        for t in tasksData:
             tasks.append('%s: %s' % (t['aid'], t['description']))
 
         selected = self.fzf.prompt(tasks)
@@ -37,11 +37,12 @@ class Task:
         print('\n' + bcolors.HEADER + 'Adding task\n' + bcolors.ENDC)
         description = input('Description: ')
         aid = self.model.create_task_draft(description)
+        print(bcolors.OKBLUE + '\n[task has been created]' + bcolors.ENDC)
         self.manage_task(aid)
 
     def manage_task(self, aid):
         task = self.model.get_task(aid)
-        print('\n' + bcolors.HEADER + 'Managing: [' + task['aid'] + '] ' + task['description'] + bcolors.ENDC)
+        print('\n' + bcolors.HEADER + 'Managing task: [' + task['aid'] + '] ' + task['description'] + bcolors.ENDC)
 
         long_term = ' '
         if task['long_term'] and task['long_term'] != 'FALSE':
@@ -61,7 +62,7 @@ Created:     %s
         self.manage_task_menu(aid)
 
     def manage_task_menu(self, aid):
-        menu = input(bcolors.OKGREEN + 'What you want to do? (?e*+-v&><q) ' + bcolors.ENDC)
+        menu = input(bcolors.OKBLUE + '~task: ' + bcolors.OKGREEN + 'What you want to do? (?e*+-v&><q) ' + bcolors.ENDC)
 
         if menu == 'q':
             self.bye()
@@ -150,10 +151,12 @@ Created:     %s ''' % (task['aid'], '', long_term, task['created_at'])
 
     def toggle_long_term(self, aid):
         self.model.toggle_long_term(aid)
+        print(bcolors.OKBLUE + '\n[task has been updated]' + bcolors.ENDC)
         self.manage_task(aid)
 
     def toggle_done(self, aid):
         self.model.toggle_done(aid)
+        print(bcolors.OKBLUE + '\n[task has been updated]' + bcolors.ENDC)
         self.manage_task(aid)
 
     def bye(self):
