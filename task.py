@@ -31,33 +31,35 @@ class Task:
             if aid:
                 self.edit_task(aid)
         else:
-            print(bcolors.FAIL + 'Task was not selected...\n' + bcolors.ENDC)
+            print(bcolors.FAIL + 'Task was not selected...' + bcolors.ENDC)
 
     def add(self):
-        print('\n' + bcolors.HEADER + 'Adding task\n' + bcolors.ENDC)
+        print(bcolors.HEADER + 'Adding task' + bcolors.ENDC)
         description = input('Description: ')
         aid = self.model.create_task_draft(description)
-        print(bcolors.OKBLUE + '\n[task has been created]' + bcolors.ENDC)
+        print(bcolors.OKBLUE + '[task has been created]' + bcolors.ENDC)
         self.manage_task(aid)
 
     def manage_task(self, aid):
         task = self.model.get_task(aid)
-        print('\n' + bcolors.HEADER + 'Managing task: [' + task['aid'] + '] ' + task['description'] + bcolors.ENDC)
+        print(bcolors.HEADER + 'Managing task: [' + task['aid'] + '] ' + task['description'] + bcolors.ENDC)
 
         long_term = ' '
         if task['long_term'] and task['long_term'] != 'FALSE':
             long_term = 'x'
 
-        print('''
-%s
+        tags = ''
+        if task['tags']:
+            tags = ' '.join([t['name'] for t in task['tags']])
+
+        print('''%s
 Description: %s
 Tags:        [%s]
 Long Term:   [%s]
-Created:     %s
-        ''' % (task['aid'], task['description'], '', long_term, task['created_at']))
+Created:     %s ''' % (task['aid'], task['description'], tags, long_term, task['created_at']))
 
         if task['done'] and task['done'] != 'FALSE':
-            print(bcolors.OKGREEN + 'Finished:    ' + task['finished_at'] + '\n' + bcolors.ENDC)
+            print(bcolors.OKGREEN + 'Finished:    ' + task['finished_at'] + bcolors.ENDC)
 
         self.manage_task_menu(aid)
 
@@ -76,6 +78,12 @@ Created:     %s
         elif menu == '*':
             self.toggle_long_term(aid)
 
+        elif menu == '+':
+            self.add_tags(aid)
+
+        elif menu == '-':
+            self.remove_tags(aid)
+
         elif menu == 'v':
             self.toggle_done(aid)
 
@@ -83,7 +91,7 @@ Created:     %s
             return
 
         else:
-            print(bcolors.FAIL + 'This is not implemented...\n' + bcolors.ENDC)
+            print(bcolors.FAIL + 'This is not implemented...' + bcolors.ENDC)
             self.manage_task_menu(aid)
 
     def manage_task_about(self, aid):
@@ -110,10 +118,14 @@ q - exit
         if task['long_term'] and task['long_term'] != 'FALSE':
             long_term = 'x'
 
+        tags = ''
+        if task['tags']:
+            tags = ' '.join([t['name'] for t in task['tags']])
+
         content = '''%s
 Tags:        [%s]
 Long Term:   [%s]
-Created:     %s ''' % (task['aid'], '', long_term, task['created_at'])
+Created:     %s ''' % (task['aid'], tags, long_term, task['created_at'])
 
         if task['done'] and task['done'] != 'FALSE':
             content += '\nFinished:    ' + task['finished_at']
@@ -146,18 +158,51 @@ Created:     %s ''' % (task['aid'], '', long_term, task['created_at'])
                 found = True
 
         self.model.save_content(aid, content)
-        print(bcolors.OKBLUE + '\n[content has been saved]' + bcolors.ENDC)
+        print(bcolors.OKBLUE + '[content has been saved]' + bcolors.ENDC)
         self.manage_task(aid)
 
     def toggle_long_term(self, aid):
         self.model.toggle_long_term(aid)
-        print(bcolors.OKBLUE + '\n[task has been updated]' + bcolors.ENDC)
+        print(bcolors.OKBLUE + '[task has been updated]' + bcolors.ENDC)
         self.manage_task(aid)
 
     def toggle_done(self, aid):
         self.model.toggle_done(aid)
-        print(bcolors.OKBLUE + '\n[task has been updated]' + bcolors.ENDC)
+        print(bcolors.OKBLUE + '[task has been updated]' + bcolors.ENDC)
         self.manage_task(aid)
+
+    def add_tags(self, aid):
+        task = self.model.get_task(aid)
+        unlinked_tags = self.model.get_tags_not_in_task(task['id'])
+        if len(unlinked_tags) == 0:
+            print(bcolors.FAIL + 'Where is no more unlinked tags left...' + bcolors.ENDC)
+            self.manage_task(aid)
+
+        tags = [t['name'] for t in unlinked_tags]
+
+        selected = self.fzf.prompt(tags, '--multi --cycle')
+        if selected:
+            self.model.link_tags_to_task(task['id'], selected)
+            print(bcolors.OKBLUE + '[tags have been linked]' + bcolors.ENDC)
+            self.manage_task(aid)
+        else:
+            print(bcolors.FAIL + 'Tag was not selected...' + bcolors.ENDC)
+
+    def remove_tags(self, aid):
+        task = self.model.get_task(aid)
+        if not task['tags']:
+            print(bcolors.FAIL + 'Where is no tags linked...' + bcolors.ENDC)
+            self.manage_task(aid)
+
+        tags = [t['name'] for t in task['tags']]
+
+        selected = self.fzf.prompt(tags, '--multi --cycle')
+        if selected:
+            self.model.unlink_tags_from_task(task['id'], selected)
+            print(bcolors.OKBLUE + '[tags have been unlinked]' + bcolors.ENDC)
+            self.manage_task(aid)
+        else:
+            print(bcolors.FAIL + 'Tag was not selected...' + bcolors.ENDC)
 
     def bye(self):
         print(bcolors.FAIL + 'bye o/' + bcolors.ENDC)

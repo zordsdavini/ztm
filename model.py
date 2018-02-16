@@ -43,16 +43,34 @@ class Model:
         return aid
 
     def get_task(self, aid):
-        query = '''
-            SELECT t.* FROM task t
-            LEFT JOIN tag_task tgt ON t.id = tgt.task_id
-            LEFT JOIN tag tg ON tg.id = tgt.tag_id
-            WHERE t.aid = ?
-        '''
+        query = 'SELECT t.* FROM task t WHERE t.aid = ?'
         cursor = self.conn.cursor()
         results = cursor.execute(query, (aid,))
+        task = dict(results.fetchone())
 
-        return results.fetchone()
+        tquery = '''
+            SELECT t.* from tag t
+            LEFT JOIN tag_task tt ON t.id = tt.tag_id
+            WHERE tt.task_id = ?
+        '''
+        tags = cursor.execute(tquery, (task['id'],))
+        task['tags'] = []
+        for tag in tags:
+            task['tags'].append(tag)
+
+        return task
+
+    def get_tags_not_in_task(self, task_id):
+        query = '''
+            SELECT t.* from tag t
+            WHERE t.id NOT IN (
+                SELECT t2.id from tag t2
+                LEFT JOIN tag_task tt ON t2.id = tt.tag_id
+                WHERE tt.task_id = ?
+            )
+        '''
+        cursor = self.conn.cursor()
+        return cursor.execute(query, (task_id,))
 
     def save_content(self, aid, content):
         cursor = self.conn.cursor()
@@ -100,4 +118,22 @@ class Model:
         query = 'DELETE FROM tag WHERE name = ?'
         cursor = self.conn.cursor()
         cursor.execute(query, (name,))
+        self.conn.commit()
+
+    def link_tags_to_task(self, task_id, tag_names):
+        query = 'INSERT INTO tag_task (task_id, tag_id) VALUES (?, ?)'
+        cursor = self.conn.cursor()
+        for name in tag_names:
+            tag = self.get_tag_by_name(name)
+            cursor.execute(query, (task_id, tag['id']))
+
+        self.conn.commit()
+
+    def unlink_tags_from_task(self, task_id, tag_names):
+        query = 'DELETE FROM tag_task WHERE task_id = ? AND  tag_id = ?'
+        cursor = self.conn.cursor()
+        for name in tag_names:
+            tag = self.get_tag_by_name(name)
+            cursor.execute(query, (task_id, tag['id']))
+
         self.conn.commit()
