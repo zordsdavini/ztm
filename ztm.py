@@ -5,6 +5,7 @@ from pyfzf.pyfzf import FzfPrompt
 from model import Model
 from task import Task
 from tag import Tag
+from config import Config
 from bcolors import bcolors
 
 
@@ -13,6 +14,7 @@ class Main:
         self.model = Model()
         self.task = Task()
         self.tag = Tag()
+        self.config = Config()
         self.fzf = FzfPrompt()
 
     def run(self):
@@ -49,6 +51,10 @@ Task manager from Zordsdavini (2018) ''' + bcolors.ENDC)
 
         elif menu == 't':
             self.tag.manage_tag()
+            self.menu()
+
+        elif menu == 'c':
+            self.config.manage()
             self.menu()
 
         elif menu == 'q':

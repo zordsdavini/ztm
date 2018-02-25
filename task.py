@@ -62,10 +62,13 @@ Created:     %s ''' % (task['aid'], task['description'], tags, long_term, task['
         if task['done'] and task['done'] != 'FALSE':
             print(bcolors.OKGREEN + 'Finished:    ' + task['finished_at'] + bcolors.ENDC)
 
+        if task['active'] and task['active'] != 'FALSE':
+            print(bcolors.WARNING + 'ACTIVE' + bcolors.ENDC)
+
         self.manage_task_menu(aid)
 
     def manage_task_menu(self, aid):
-        menu = input(bcolors.OKBLUE + '~task: ' + bcolors.OKGREEN + 'What you want to do? (?e*+-v&><q) ' + bcolors.ENDC)
+        menu = input(bcolors.OKBLUE + '~task: ' + bcolors.OKGREEN + 'What you want to do? (?e*+-!v&><q) ' + bcolors.ENDC)
 
         if menu == 'q':
             self.bye()
@@ -84,6 +87,9 @@ Created:     %s ''' % (task['aid'], task['description'], tags, long_term, task['
 
         elif menu == '-':
             self.remove_tags(aid)
+
+        elif menu == '!':
+            self.toggle_active(aid)
 
         elif menu == 'v':
             self.toggle_done(aid)
@@ -104,7 +110,9 @@ e - edit content
 * - toggle long term
 + - add tag
 - - remove tag
-v - mark done/undone
+! - toggle active
+v - toggle done
+x - delete task
 & - add child task
 > - go to child
 < - back
@@ -130,6 +138,9 @@ Created:     %s ''' % (task['aid'], tags, long_term, task['created_at'])
 
         if task['done'] and task['done'] != 'FALSE':
             content += '\nFinished:    ' + task['finished_at']
+
+        if task['active'] and task['active'] != 'FALSE':
+            content += '\n**ACTIVE**'
 
         content += '\n\n# ' + task['description']
         if task['content']:
@@ -165,6 +176,11 @@ Created:     %s ''' % (task['aid'], tags, long_term, task['created_at'])
     def toggle_long_term(self, aid):
         self.model.toggle_long_term(aid)
         print(bcolors.OKBLUE + '[task has been updated]' + bcolors.ENDC)
+        self.manage_task(aid)
+
+    def toggle_active(self, aid):
+        self.model.toggle_active(aid)
+        print(bcolors.OKBLUE + '[task has been activated]' + bcolors.ENDC)
         self.manage_task(aid)
 
     def toggle_done(self, aid):

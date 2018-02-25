@@ -3,7 +3,6 @@ import sys
 from pyfzf.pyfzf import FzfPrompt
 
 from model import Model
-from task import Task
 from bcolors import bcolors
 
 
@@ -33,7 +32,7 @@ class Tag:
         self.manage_tag_menu(tid)
 
     def manage_tag_menu(self, tid=None):
-        menu = input(bcolors.OKBLUE + '~tag: ' + bcolors.OKGREEN + 'What you want to do? (?/+-<q) ' + bcolors.ENDC)
+        menu = input(bcolors.OKBLUE + '~tag: ' + bcolors.OKGREEN + 'What you want to do? (?/+-&<q) ' + bcolors.ENDC)
 
         if menu == 'q':
             self.bye()

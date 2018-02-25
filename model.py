@@ -19,13 +19,22 @@ class Model:
 
         return self.conn.execute(query, tag_name)
 
-    def get_all_tasks(self):
+    def get_all_tasks(self, done=False, active=False):
+        done_query = ''
+        if done:
+            done_query = 'AND t.done = 1'
+
+        active_query = ''
+        if active:
+            active_query = 'AND t.active = 1'
+
         query = '''
             SELECT t.*, GROUP_CONCAT(g.name, ' ') AS tag_names FROM task t
             LEFT JOIN tag_task tt ON tt.task_id = t.id
             LEFT JOIN tag g ON g.id = tt.tag_id
+            WHERE 1 %s %s
             GROUP BY t.id
-        '''
+        ''' % (done_query, active_query)
 
         return self.conn.execute(query)
 
@@ -86,9 +95,14 @@ class Model:
         cursor.execute('UPDATE task SET long_term=NOT long_term WHERE aid=?', (aid))
         self.conn.commit()
 
+    def toggle_active(self, aid):
+        cursor = self.conn.cursor()
+        cursor.execute('UPDATE task SET active=NOT active WHERE aid=?', (aid))
+        self.conn.commit()
+
     def toggle_done(self, aid):
         cursor = self.conn.cursor()
-        cursor.execute('UPDATE task SET done=NOT done, finished_at=DATETIME(\'now\') WHERE aid=?', (aid))
+        cursor.execute('UPDATE task SET done=NOT done, finished_at=DATETIME(\'now\'), active=0 WHERE aid=?', (aid))
         self.conn.commit()
 
     def create_tag(self, name):
