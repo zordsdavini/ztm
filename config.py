@@ -14,6 +14,7 @@ class Config:
         self.fzf = FzfPrompt()
 
     def manage(self):
+        print(bcolors.HEADER + 'Managing configs' + bcolors.ENDC)
         done = 'off'
         if self.params.get('done'):
             done = 'on'
@@ -30,12 +31,15 @@ class Config:
 
         elif menu == '?':
             self.manage_about()
-
-        elif menu == '!':
-            self.toggle_active()
+            self.manage_menu()
 
         elif menu == 'v':
             self.toggle_done()
+            self.manage()
+
+        elif menu == 't':
+            self.manage_timeslot()
+            self.manage_menu()
 
         elif menu == '<':
             return
@@ -56,13 +60,11 @@ t - manage time slots
 < - back
 q - exit
                 ''' + bcolors.ENDC)
-        self.manage()
 
     def toggle_done(self):
         done = self.params.get('done')
         self.params.update('done', not done)
         print(bcolors.OKBLUE + '[parameter "done" has been toggled]' + bcolors.ENDC)
-        self.manage()
 
     def manage_timeslot(self):
         self.manage_timeslot_menu()
