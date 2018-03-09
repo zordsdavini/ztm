@@ -1,3 +1,4 @@
+import argparse
 import sys
 
 from pyfzf.pyfzf import FzfPrompt
@@ -7,6 +8,7 @@ from task import Task
 from tag import Tag
 from config import Config
 from bcolors import bcolors
+from params import Params
 
 
 class Main:
@@ -15,9 +17,19 @@ class Main:
         self.task = Task()
         self.tag = Tag()
         self.config = Config()
+        self.params = Params()
+
         self.fzf = FzfPrompt()
 
+        self.parser = argparse.ArgumentParser('ztm')
+        self.parser.add_argument('-c', '--current', dest='active', action='store_true')
+        self.parser.set_defaults(active=False)
+
     def run(self):
+        n = self.parser.parse_args()
+        if n.active:
+            self.params.update('active', True)
+
         print(bcolors.HEADER + '''
                          GEEEEEEEL        ..       :
        ,##############Wf.,;;L#K;;.       ,W,     .Et

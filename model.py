@@ -1,6 +1,7 @@
 import sqlite3
 
 from abcex import Abcex
+from params import Params
 
 
 class Model:
@@ -8,6 +9,8 @@ class Model:
         self.conn = sqlite3.connect('ztm.db')
         self.conn.row_factory = sqlite3.Row
         self.abcex = Abcex()
+
+        self.params = Params()
 
     def get_tasks_by_tag(self, tag_name):
         query = '''
@@ -21,11 +24,11 @@ class Model:
 
     def get_all_tasks(self, done=False, active=False):
         done_query = ''
-        if done:
+        if done or self.params.get('done'):
             done_query = 'AND t.done = 1'
 
         active_query = ''
-        if active:
+        if active or self.params.get('active'):
             active_query = 'AND t.active = 1'
 
         query = '''
