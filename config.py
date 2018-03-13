@@ -15,6 +15,12 @@ class Config:
 
     def manage(self):
         print(bcolors.HEADER + 'Managing configs' + bcolors.ENDC)
+        active = 'off'
+        if self.params.get('active'):
+            active = 'on'
+
+        print(bcolors.WARNING + 'Show current tasks: [' + active + ']' + bcolors.ENDC)
+
         done = 'off'
         if self.params.get('done'):
             done = 'on'
@@ -32,6 +38,10 @@ class Config:
         elif menu == '?':
             self.manage_about()
             self.manage_menu()
+
+        elif menu == '!':
+            self.toggle_active()
+            self.manage()
 
         elif menu == 'v':
             self.toggle_done()
@@ -60,6 +70,11 @@ t - manage time slots
 < - back
 q - exit
                 ''' + bcolors.ENDC)
+
+    def toggle_active(self):
+        active = self.params.get('active')
+        self.params.update('active', not active)
+        print(bcolors.OKBLUE + '[parameter "active" has been toggled]' + bcolors.ENDC)
 
     def toggle_done(self):
         done = self.params.get('done')
