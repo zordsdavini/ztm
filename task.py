@@ -151,7 +151,7 @@ Created:     %s ''' % (task['aid'], tags, long_term, task['created_at'])
             f.write(content)
             f.close()
 
-            subprocess.call(['vim', temp.name])
+            subprocess.call(['nvim', temp.name])
 
             f = open(temp.name, 'r')
             new_content = f.read()

@@ -85,14 +85,10 @@ q - exit
         self.manage_timeslot_menu()
 
     def manage_timeslot_menu(self):
-        menu = input(bcolors.OKBLUE + '~config: ' + bcolors.OKGREEN + 'What you want to do? (?!vt#<q) ' + bcolors.ENDC)
+        menu = input(bcolors.OKBLUE + '~config/time_slot: ' + bcolors.OKGREEN + 'What you want to do? (?!vt#<q) ' + bcolors.ENDC)
 
         if menu == 'q':
             self.bye()
-
-        elif menu == '/':
-            self.search_time_slot()
-            self.manage_menu()
 
         elif menu == '?':
             self.manage_timeslot_about()
@@ -115,10 +111,8 @@ q - exit
 Short instruction
 -----------------
 ? - help (this dialog)
-! - toggle active tasks
-v - toggle done tasks
-t - manage time slots
-# - backup/restore
++ - add time slot
+- - remove time slot
 < - back
 q - exit
                 ''' + bcolors.ENDC)
