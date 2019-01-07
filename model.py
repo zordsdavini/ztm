@@ -105,7 +105,7 @@ class Model:
 
     def toggle_done(self, aid):
         cursor = self.conn.cursor()
-        cursor.execute('UPDATE task SET done=NOT done, finished_at=DATETIME(\'now\'), active=0 WHERE aid=?', (aid))
+        cursor.execute('UPDATE task SET done=NOT done, finished_at=DATETIME(\'now\'), active=0 WHERE aid=?', (aid,))
         self.conn.commit()
 
     def create_tag(self, name):
