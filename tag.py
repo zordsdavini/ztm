@@ -9,6 +9,7 @@ class Tag:
         self.model = Model()
         self.fzf = FzfPrompt()
         self.screen = Screen()
+
         self.header = ''
         self.info = None
 

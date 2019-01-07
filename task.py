@@ -1,19 +1,23 @@
 import re
 import sqlite3
 import subprocess
-import sys
 import tempfile
 
 from pyfzf.pyfzf import FzfPrompt
 
 from model import Model
 from bcolors import bcolors
+from screen import Screen
 
 
 class Task:
     def __init__(self):
         self.model = Model()
         self.fzf = FzfPrompt()
+        self.screen = Screen()
+
+        self.header = ''
+        self.info = ''
 
     def search(self):
         tasks = []
@@ -32,18 +36,18 @@ class Task:
             if aid:
                 self.edit_task(aid)
         else:
-            print(bcolors.FAIL + 'Task was not selected...' + bcolors.ENDC)
+            self.screen.add_fail('Task was not selected...')
 
     def add(self):
-        print(bcolors.HEADER + 'Adding task' + bcolors.ENDC)
+        self.screen.print_init('Adding task')
         description = input('Description: ')
         aid = self.model.create_task_draft(description)
-        print(bcolors.OKBLUE + '[task has been created]' + bcolors.ENDC)
+        self.screen.add_message('task has been created')
         self.manage_task(aid)
 
     def manage_task(self, aid):
         task = self.model.get_task(aid)
-        print(bcolors.HEADER + 'Managing task: [' + task['aid'] + '] ' + task['description'] + bcolors.ENDC)
+        self.header = 'Managing task: [' + task['aid'] + '] ' + task['description']
 
         long_term = ' '
         if task['long_term'] and task['long_term'] != 'FALSE':
@@ -53,28 +57,46 @@ class Task:
         if task['tags']:
             tags = ' '.join([t['name'] for t in task['tags']])
 
-        print('''%s
+        self.info = '''%s
 Description: %s
 Tags:        [%s]
 Long Term:   [%s]
-Created:     %s ''' % (task['aid'], task['description'], tags, long_term, task['created_at']))
+Created:     %s ''' % (task['aid'], task['description'], tags, long_term, task['created_at'])
 
         if task['done'] and task['done'] != 'FALSE':
-            print(bcolors.OKGREEN + 'Finished:    ' + task['finished_at'] + bcolors.ENDC)
+            self.info += bcolors.ENDC + bcolors.OKGREEN + '\nFinished:    ' + task['finished_at']
 
         if task['active'] and task['active'] != 'FALSE':
-            print(bcolors.WARNING + 'ACTIVE' + bcolors.ENDC)
+            self.info += bcolors.ENDC + bcolors.WARNING + '\nACTIVE'
 
         self.manage_task_menu(aid)
 
     def manage_task_menu(self, aid):
-        menu = input(bcolors.OKBLUE + '~task: ' + bcolors.OKGREEN + 'What you want to do? (?e*+-!v&><q) ' + bcolors.ENDC)
+        about = '''
+Short instruction
+-----------------
+? - help (this dialog)
+e - edit content
+* - toggle long term
++ - add tag
+- - remove tag
+! - toggle active
+v - toggle done
+x - delete task
+& - add child task
+> - go to child
+< - back
+q - exit
+        '''
+        self.screen.change_path('~task', '?e*+-!v&><q', about, self.header, self.info)
+        menu = self.screen.print()
 
         if menu == 'q':
-            self.bye()
+            self.screen.bye()
 
         elif menu == '?':
-            self.manage_task_about(aid)
+            self.screen.activate_about()
+            self.manage_task_menu(aid)
 
         elif menu == 'e':
             self.edit_task(aid)
@@ -98,27 +120,8 @@ Created:     %s ''' % (task['aid'], task['description'], tags, long_term, task['
             return
 
         else:
-            print(bcolors.FAIL + 'This is not implemented...' + bcolors.ENDC)
+            self.screen.add_fail('This is not implemented...')
             self.manage_task_menu(aid)
-
-    def manage_task_about(self, aid):
-        print(bcolors.WARNING + '''
-Short instruction
------------------
-? - help (this dialog)
-e - edit content
-* - toggle long term
-+ - add tag
-- - remove tag
-! - toggle active
-v - toggle done
-x - delete task
-& - add child task
-> - go to child
-< - back
-q - exit
-        ''' + bcolors.ENDC)
-        self.manage_task_menu(aid)
 
     def edit_task(self, aid):
         task = self.model.get_task(aid)
@@ -170,29 +173,29 @@ Created:     %s ''' % (task['aid'], tags, long_term, task['created_at'])
                 found = True
 
         self.model.save_content(aid, content)
-        print(bcolors.OKBLUE + '[content has been saved]' + bcolors.ENDC)
+        self.screen.add_message('content has been saved')
         self.manage_task(aid)
 
     def toggle_long_term(self, aid):
         self.model.toggle_long_term(aid)
-        print(bcolors.OKBLUE + '[task has been updated]' + bcolors.ENDC)
+        self.screen.add_message('task has been updated')
         self.manage_task(aid)
 
     def toggle_active(self, aid):
         self.model.toggle_active(aid)
-        print(bcolors.OKBLUE + '[task has been activated]' + bcolors.ENDC)
+        self.screen.add_message('task has been activated')
         self.manage_task(aid)
 
     def toggle_done(self, aid):
         self.model.toggle_done(aid)
-        print(bcolors.OKBLUE + '[task has been updated]' + bcolors.ENDC)
+        self.screen.add_message('task has been updated')
         self.manage_task(aid)
 
     def add_tags(self, aid):
         task = self.model.get_task(aid)
         unlinked_tags = self.model.get_tags_not_in_task(task['id'])
         if type(unlinked_tags) is sqlite3.Cursor and unlinked_tags.rowcount == 0:
-            print(bcolors.FAIL + 'Where is no more unlinked tags left...' + bcolors.ENDC)
+            self.screen.add_fail('Where is no more unlinked tags left...')
             self.manage_task(aid)
 
         tags = [t['name'] for t in unlinked_tags]
@@ -200,15 +203,15 @@ Created:     %s ''' % (task['aid'], tags, long_term, task['created_at'])
         selected = self.fzf.prompt(tags, '--multi --cycle')
         if selected:
             self.model.link_tags_to_task(task['id'], selected)
-            print(bcolors.OKBLUE + '[tags have been linked]' + bcolors.ENDC)
+            self.screen.add_message('tags have been linked')
             self.manage_task(aid)
         else:
-            print(bcolors.FAIL + 'Tag was not selected...' + bcolors.ENDC)
+            self.screen.add_fail('Tag was not selected...')
 
     def remove_tags(self, aid):
         task = self.model.get_task(aid)
         if not task['tags']:
-            print(bcolors.FAIL + 'Where is no tags linked...' + bcolors.ENDC)
+            self.screen.add_fail('Where is no tags linked...')
             self.manage_task(aid)
 
         tags = [t['name'] for t in task['tags']]
@@ -216,11 +219,7 @@ Created:     %s ''' % (task['aid'], tags, long_term, task['created_at'])
         selected = self.fzf.prompt(tags, '--multi --cycle')
         if selected:
             self.model.unlink_tags_from_task(task['id'], selected)
-            print(bcolors.OKBLUE + '[tags have been unlinked]' + bcolors.ENDC)
+            self.screen.add_message('tags have been unlinked')
             self.manage_task(aid)
         else:
-            print(bcolors.FAIL + 'Tag was not selected...' + bcolors.ENDC)
-
-    def bye(self):
-        print(bcolors.FAIL + 'bye o/' + bcolors.ENDC)
-        sys.exit(0)
+            self.screen.add_fail('Tag was not selected...')
