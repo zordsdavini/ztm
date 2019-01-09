@@ -158,3 +158,33 @@ class Model:
             cursor.execute(query, (task_id, tag['id']))
 
         self.conn.commit()
+
+    def create_time_slot(self, name, description):
+        query = 'INSERT INTO time_slot (name, description) VALUES (?, ?)'
+        cursor = self.conn.cursor()
+        cursor.execute(query, (name, description))
+        self.conn.commit()
+
+        return cursor.lastrowid
+
+    def get_all_time_slots(self):
+        query = 'SELECT t.* FROM time_slot t'
+
+        return self.conn.execute(query)
+
+    def remove_time_slot(self, tid):
+        query = 'DELETE FROM time_slot WHERE id = ?'
+        cursor = self.conn.cursor()
+        cursor.execute(query, (tid,))
+        self.conn.commit()
+
+    def add_tag_to_time_slot(self, t_id, ts_id):
+        query = 'DELETE FROM tag_time_slot WHERE tag_id = ?'
+        cursor = self.conn.cursor()
+        cursor.execute(query, (t_id,))
+        self.conn.commit()
+
+        query = 'INSERT INTO tag_time_slot (tag_id, time_slot_id) VALUES (?, ?)'
+        cursor = self.conn.cursor()
+        cursor.execute(query, (t_id, ts_id))
+        self.conn.commit()

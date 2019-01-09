@@ -2,6 +2,7 @@ from pyfzf.pyfzf import FzfPrompt
 
 from model import Model
 from screen import Screen
+from config import Config
 
 
 class Tag:
@@ -9,6 +10,7 @@ class Tag:
         self.model = Model()
         self.fzf = FzfPrompt()
         self.screen = Screen()
+        self.config = Config()
 
         self.header = ''
         self.info = None
@@ -37,11 +39,13 @@ Short instruction
 / - search tag
 + - add tag
 - - remove tag
+@ - append to time slot
+0 - list tags without time_slot
 & - search linked tasks
 < - back
 q - exit
         '''
-        self.screen.change_path('~tag', '?/+-&<q', about, self.header, self.info)
+        self.screen.change_path('~tag', '?/+-&@0<q', about, self.header, self.info)
         menu = self.screen.print()
 
         if menu == 'q':
@@ -60,6 +64,10 @@ q - exit
 
         elif menu == '-':
             self.remove_tag(tid)
+
+        elif menu == '@':
+            self.add_to_time_slot(tid)
+            self.manage_tag(tid)
 
         elif menu == '<':
             return
@@ -109,3 +117,15 @@ q - exit
             self.manage_tag()
         else:
             self.screen.add_fail('Tag was not selected...')
+
+    def add_to_time_slot(self, tid):
+        if tid is None:
+            self.screen.add_fail('Tag is not selected...')
+            return
+
+        ts_id = self.config.select_time_slot()
+        if ts_id is None:
+            self.screen.add_fail('Time slot was not selected...')
+            return
+
+        self.model.add_tag_to_time_slot(tid, ts_id)
